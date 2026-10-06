@@ -12,7 +12,8 @@ class UserController extends Controller
 {
     public function index()
     {
-        return response()->json(['message' => 'User Controller']);
+        $user = User::with('hobis')->get();
+        return response()->json(['users' => $user]);
     }
 
     public function store(Request $request)
