@@ -34,9 +34,3 @@ Route::group(['prefix' => 'user'], function () {
     Route::get('', [UserController::class, 'index']);
     Route::get('{id}', [UserController::class, 'show'])->middleware('auth:api');
 });
-
-Route::group(['prefix' => 'hobi'], function () {
-    Route::post('create', [HobiController::class, 'store'])->middleware('auth:api');
-    Route::get('', [HobiController::class, 'index'])->middleware('auth:api');
-    Route::put('update/{id}', [HobiController::class, 'update'])->middleware('auth:api');
-});
