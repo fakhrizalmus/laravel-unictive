@@ -13,9 +13,14 @@
                 <h1 class="h3 mb-1">Data Users</h1>
                 <p class="text-secondary mb-0">Kelola data user dan hobi.</p>
             </div>
-            <button id="add-user-button" type="button" class="btn btn-primary">
-                Tambah User
-            </button>
+            <div class="d-flex gap-2">
+                <button id="add-user-button" type="button" class="btn btn-primary">
+                    Tambah User
+                </button>
+                <button id="logout-button" type="button" class="btn btn-outline-danger">
+                    Logout
+                </button>
+            </div>
         </div>
 
         <div id="users-status" class="alert d-none" role="alert" aria-live="polite"></div>
@@ -123,14 +128,35 @@
             </div>
         </div>
     </div>
+    {{-- Modal Konfirmasi Logout --}}
+    <div class="modal fade" id="logout-modal" tabindex="-1" aria-labelledby="logout-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="logout-modal-title">Konfirmasi Logout</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="logout-error" class="alert alert-danger d-none" role="alert"></div>
+                    <p class="mb-0">Apakah Anda yakin ingin keluar dari akun ini?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button id="confirm-logout-button" type="button" class="btn btn-danger">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const apiUrl = @json(url('/api/user'));
+        const logoutUrl = @json(url('/api/auth/logout'));
         const loginUrl = @json(url('/login'));
         const tableBody = document.getElementById('users-table-body');
         const statusBox = document.getElementById('users-status');
         const addUserButton = document.getElementById('add-user-button');
+        const logoutButton = document.getElementById('logout-button');
         const userForm = document.getElementById('user-form');
         const editUserForm = document.getElementById('edit-user-form');
         const userModal = new bootstrap.Modal(document.getElementById('user-modal'));
@@ -142,6 +168,10 @@
         const deleteUserName = document.getElementById('delete-user-name');
         const deleteUserError = document.getElementById('delete-user-error');
         const confirmDeleteUserButton = document.getElementById('confirm-delete-user-button');
+        const logoutModalElement = document.getElementById('logout-modal');
+        const logoutModal = new bootstrap.Modal(logoutModalElement);
+        const logoutError = document.getElementById('logout-error');
+        const confirmLogoutButton = document.getElementById('confirm-logout-button');
         let users = [];
         let editingUserId = null;
         let deletingUser = null;
@@ -357,6 +387,28 @@
             deletingUser = null;
         });
         confirmDeleteUserButton.addEventListener('click', deleteUser);
+
+        logoutButton.addEventListener('click', () => {
+            logoutError.textContent = '';
+            logoutError.classList.add('d-none');
+            logoutModal.show();
+        });
+        confirmLogoutButton.addEventListener('click', async () => {
+            confirmLogoutButton.disabled = true;
+            logoutError.textContent = '';
+            logoutError.classList.add('d-none');
+
+            try {
+                await apiRequest(logoutUrl, { method: 'POST' });
+                localStorage.removeItem('token');
+                window.location.assign(loginUrl);
+            } catch (error) {
+                logoutError.textContent = `Gagal logout: ${error.message}`;
+                logoutError.classList.remove('d-none');
+            } finally {
+                confirmLogoutButton.disabled = false;
+            }
+        });
 
         loadUsers();
     </script>
