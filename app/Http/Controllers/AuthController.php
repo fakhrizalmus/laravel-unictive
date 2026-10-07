@@ -27,6 +27,7 @@ class AuthController extends Controller
         $user = User::create(array_merge($request->all(), [
             'name' => $request['name'],
             'email' => $request['email'],
+            'role' => 'admin',
             'password' => Hash::make($request['password']),
         ]));
 

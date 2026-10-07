@@ -27,10 +27,10 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
-Route::group(['prefix' => 'user'], function () {
-    Route::put('edit/{id}', [UserController::class, 'update'])->middleware('auth:api');
-    Route::delete('delete/{id}', [UserController::class, 'destroy'])->middleware('auth:api');
-    Route::post('create', [UserController::class, 'store'])->middleware('auth:api');
+Route::group(['middleware' => 'auth:api', 'prefix' => 'user'], function () {
+    Route::put('edit/{id}', [UserController::class, 'update']);
+    Route::delete('delete/{id}', [UserController::class, 'destroy']);
+    Route::post('create', [UserController::class, 'store']);
     Route::get('', [UserController::class, 'index']);
-    Route::get('{id}', [UserController::class, 'show'])->middleware('auth:api');
+    Route::get('{id}', [UserController::class, 'show']);
 });

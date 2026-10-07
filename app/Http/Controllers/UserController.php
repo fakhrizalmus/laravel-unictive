@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $user = User::with('hobis')->get();
+        $user = User::with('hobis')->where('role', 'user')->get();
         return response()->json(['users' => $user]);
     }
 
@@ -38,6 +38,7 @@ class UserController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
+                'role' => 'user',
                 'password' => 'password',
             ]);
 
@@ -62,7 +63,8 @@ class UserController extends Controller
 
     public function show($id)
     {
-        return response()->json(['message' => 'User Controller Show', 'id' => $id]);
+        $user = User::with('hobis')->find($id);
+        return response()->json(['user' => $user]);
     }
 
     public function update(Request $request, $id)
@@ -160,11 +162,5 @@ class UserController extends Controller
             'status' => true,
             'message' => 'User and hobbies deleted successfully',
         ]);
-    }
-
-    public function getUserProfile()
-    {
-        $user = auth()->user();
-        return response()->json(['user' => $user]);
     }
 }
