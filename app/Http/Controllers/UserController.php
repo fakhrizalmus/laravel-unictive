@@ -24,7 +24,11 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            ],
             'hobis' => ['required', 'array', 'min:1'],
             'hobis.*.nama_hobi' => ['required', 'string', 'max:255'],
         ]);
@@ -75,7 +79,7 @@ class UserController extends Controller
                 'sometimes',
                 'required',
                 'email',
-                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
             ],
             'hobis' => ['sometimes', 'array'],
             'hobis.*.id' => [
