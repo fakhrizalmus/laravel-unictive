@@ -43,10 +43,10 @@ Contoh body untuk membuat atau memperbarui user:
 
 ```json
 {
-  "name": "Ayu",
-  "email": "ayu@example.com",
+  "name": "Rizal",
+  "email": "rizal@example.com",
   "hobis": [
-    { "nama_hobi": "Membaca" },
+    { "nama_hobi": "Lari" },
     { "nama_hobi": "Bersepeda" }
   ]
 }
