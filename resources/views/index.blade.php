@@ -39,7 +39,7 @@
             </div>
         </div>
     </main>
-
+    {{-- Modal Tambah User --}}
     <div class="modal fade" id="user-modal" tabindex="-1" aria-labelledby="user-modal-title" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -71,6 +71,58 @@
             </div>
         </div>
     </div>
+    {{-- Modal Edit User --}}
+    <div class="modal fade" id="edit-user-modal" tabindex="-1" aria-labelledby="edit-user-modal-title" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="edit-user-form">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="edit-user-modal-title">Edit User</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="edit-user-name" class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="edit-user-name" name="name" maxlength="255" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-user-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit-user-email" name="email" maxlength="255" required>
+                        </div>
+                        <div>
+                            <label for="edit-user-hobbies" class="form-label">Hobi</label>
+                            <input type="text" class="form-control" id="edit-user-hobbies" name="hobis" required>
+                            <div class="form-text">Pisahkan beberapa hobi dengan koma.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button id="save-edit-user-button" type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {{-- Modal Konfirmasi Hapus User --}}
+    <div class="modal fade" id="delete-user-modal" tabindex="-1" aria-labelledby="delete-user-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="delete-user-modal-title">Hapus User</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="delete-user-error" class="alert alert-danger d-none" role="alert"></div>
+                    <p class="mb-0">Apakah Anda yakin ingin menghapus user <strong id="delete-user-name"></strong>?</p>
+                    <p class="text-secondary small mt-2 mb-0">Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button id="confirm-delete-user-button" type="button" class="btn btn-danger">Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -78,12 +130,21 @@
         const loginUrl = @json(url('/login'));
         const tableBody = document.getElementById('users-table-body');
         const statusBox = document.getElementById('users-status');
+        const addUserButton = document.getElementById('add-user-button');
         const userForm = document.getElementById('user-form');
+        const editUserForm = document.getElementById('edit-user-form');
         const userModal = new bootstrap.Modal(document.getElementById('user-modal'));
-        const modalTitle = document.getElementById('user-modal-title');
-        const saveButton = document.getElementById('save-user-button');
+        const editUserModal = new bootstrap.Modal(document.getElementById('edit-user-modal'));
+        const deleteUserModalElement = document.getElementById('delete-user-modal');
+        const deleteUserModal = new bootstrap.Modal(deleteUserModalElement);
+        const saveUserButton = document.getElementById('save-user-button');
+        const saveEditUserButton = document.getElementById('save-edit-user-button');
+        const deleteUserName = document.getElementById('delete-user-name');
+        const deleteUserError = document.getElementById('delete-user-error');
+        const confirmDeleteUserButton = document.getElementById('confirm-delete-user-button');
         let users = [];
         let editingUserId = null;
+        let deletingUser = null;
 
         function getToken() {
             const token = localStorage.getItem('token');
@@ -178,7 +239,7 @@
                 deleteButton.type = 'button';
                 deleteButton.className = 'btn btn-sm btn-outline-danger';
                 deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', () => deleteUser(user));
+                deleteButton.addEventListener('click', () => openDeleteUserModal(user));
 
                 actions.append(editButton, deleteButton);
                 actionsCell.appendChild(actions);
@@ -208,29 +269,26 @@
         function openAddModal() {
             editingUserId = null;
             userForm.reset();
-            modalTitle.textContent = 'Tambah User';
-            saveButton.textContent = 'Simpan';
             userModal.show();
         }
 
         function openEditModal(user) {
             editingUserId = user.id;
-            userForm.elements.name.value = user.name ?? '';
-            userForm.elements.email.value = user.email ?? '';
-            userForm.elements.hobis.value = Array.isArray(user.hobis)
+            editUserForm.reset();
+            editUserForm.elements.name.value = user.name ?? '';
+            editUserForm.elements.email.value = user.email ?? '';
+            editUserForm.elements.hobis.value = Array.isArray(user.hobis)
                 ? user.hobis.map((hobi) => hobi.nama_hobi).join(', ')
                 : '';
-            modalTitle.textContent = 'Edit User';
-            saveButton.textContent = 'Simpan Perubahan';
-            userModal.show();
+            editUserModal.show();
         }
 
-        userForm.addEventListener('submit', async (event) => {
+        async function saveUser(event, form, userId, saveButton, modal) {
             event.preventDefault();
             saveButton.disabled = true;
             hideStatus();
 
-            const hobbies = userForm.elements.hobis.value
+            const hobbies = form.elements.hobis.value
                 .split(',')
                 .map((name) => name.trim())
                 .filter(Boolean)
@@ -238,44 +296,68 @@
 
             try {
                 await apiRequest(
-                    editingUserId ? `${apiUrl}/edit/${editingUserId}` : `${apiUrl}/create`,
+                    userId !== null ? `${apiUrl}/edit/${userId}` : `${apiUrl}/create`,
                     {
-                        method: editingUserId ? 'PUT' : 'POST',
+                        method: userId !== null ? 'PUT' : 'POST',
                         body: JSON.stringify({
-                            name: userForm.elements.name.value.trim(),
-                            email: userForm.elements.email.value.trim(),
+                            name: form.elements.name.value.trim(),
+                            email: form.elements.email.value.trim(),
                             hobis: hobbies,
                         }),
                     }
                 );
 
-                userModal.hide();
+                modal.hide();
                 await loadUsers();
-                showStatus(editingUserId ? 'Data user berhasil diperbarui.' : 'User berhasil ditambahkan.');
+                showStatus(userId !== null ? 'Data user berhasil diperbarui.' : 'User berhasil ditambahkan.');
             } catch (error) {
                 showStatus(`Gagal menyimpan user: ${error.message}`, true);
             } finally {
                 saveButton.disabled = false;
             }
+        }
+
+        addUserButton.addEventListener('click', openAddModal);
+        userForm.addEventListener('submit', (event) => saveUser(event, userForm, null, saveUserButton, userModal));
+        editUserForm.addEventListener('submit', (event) => {
+            saveUser(event, editUserForm, editingUserId, saveEditUserButton, editUserModal);
         });
 
-        async function deleteUser(user) {
-            if (!window.confirm(`Hapus user ${user.name}?`)) {
+        function openDeleteUserModal(user) {
+            deletingUser = user;
+            deleteUserName.textContent = user.name ?? '';
+            deleteUserError.textContent = '';
+            deleteUserError.classList.add('d-none');
+            deleteUserModal.show();
+        }
+
+        async function deleteUser() {
+            if (!deletingUser) {
                 return;
             }
 
-            hideStatus();
-
+            confirmDeleteUserButton.disabled = true;
+            deleteUserError.textContent = '';
+            deleteUserError.classList.add('d-none');
             try {
-                await apiRequest(`${apiUrl}/delete/${user.id}`, { method: 'DELETE' });
+                await apiRequest(`${apiUrl}/delete/${deletingUser.id}`, { method: 'DELETE' });
+                deleteUserModal.hide();
+                deletingUser = null;
                 await loadUsers();
                 showStatus('User berhasil dihapus.');
             } catch (error) {
-                showStatus(`Gagal menghapus user: ${error.message}`, true);
+                deleteUserError.textContent = `Gagal menghapus user: ${error.message}`;
+                deleteUserError.classList.remove('d-none');
+            } finally {
+                confirmDeleteUserButton.disabled = false;
             }
         }
 
-        document.getElementById('add-user-button').addEventListener('click', openAddModal);
+        deleteUserModalElement.addEventListener('hidden.bs.modal', () => {
+            deletingUser = null;
+        });
+        confirmDeleteUserButton.addEventListener('click', deleteUser);
+
         loadUsers();
     </script>
 </body>
