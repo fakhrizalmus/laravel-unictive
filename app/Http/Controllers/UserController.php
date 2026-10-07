@@ -154,7 +154,6 @@ class UserController extends Controller
         }
 
         DB::transaction(function () use ($user) {
-            $user->hobis()->delete();
             $user->delete();
         });
 
