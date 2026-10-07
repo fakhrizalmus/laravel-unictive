@@ -81,7 +81,7 @@ class UserController extends Controller
                 'email',
                 Rule::unique('users', 'email')->whereNull('deleted_at')->ignore($user->id),
             ],
-            'hobis' => ['sometimes', 'array'],
+            'hobis' => ['sometimes', 'array', 'min:1'],
             'hobis.*.id' => [
                 'nullable',
                 'integer',

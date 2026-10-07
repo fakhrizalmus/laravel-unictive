@@ -52,4 +52,4 @@ Contoh body untuk membuat atau memperbarui user:
 }
 ```
 
-Saat memperbarui hobi, kirim daftar lengkap hobi yang diinginkan. Sertakan `id` untuk mengubah hobi yang sudah ada; item tanpa `id` akan ditambahkan. Kirim `"hobis": []` untuk menghapus semua hobi.
+Saat memperbarui hobi, kirim daftar lengkap hobi yang diinginkan. Sertakan `id` untuk mengubah hobi yang sudah ada; item tanpa `id` akan ditambahkan.
