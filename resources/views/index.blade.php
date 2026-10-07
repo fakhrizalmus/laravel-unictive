@@ -14,10 +14,13 @@
                 <p class="text-secondary mb-0">Kelola data user dan hobi.</p>
             </div>
             <div class="d-flex gap-2">
-                <button id="add-user-button" type="button" class="btn btn-primary">
+                <a id="login-link" href="{{ url('/login') }}" class="btn btn-outline-primary">
+                    Login
+                </a>
+                <button id="add-user-button" type="button" class="btn btn-primary d-none">
                     Tambah User
                 </button>
-                <button id="logout-button" type="button" class="btn btn-outline-danger">
+                <button id="logout-button" type="button" class="btn btn-outline-danger d-none">
                     Logout
                 </button>
             </div>
@@ -38,7 +41,32 @@
                         </tr>
                     </thead>
                     <tbody id="users-table-body">
-                        <tr><td colspan="5" class="text-center text-secondary py-4">Memuat data user...</td></tr>
+                        @forelse ($users as $index => $user)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->email }}</td>
+                                <td>{{ $user->hobis->pluck('nama_hobi')->join(', ') }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2 user-actions d-none">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary edit-user-button"
+                                            data-user-id="{{ $user->id }}"
+                                        >Edit</button>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger delete-user-button"
+                                            data-user-id="{{ $user->id }}"
+                                        >Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">Belum ada data user.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -153,10 +181,10 @@
         const apiUrl = @json(url('/api/user'));
         const logoutUrl = @json(url('/api/auth/logout'));
         const loginUrl = @json(url('/login'));
-        const tableBody = document.getElementById('users-table-body');
         const statusBox = document.getElementById('users-status');
         const addUserButton = document.getElementById('add-user-button');
         const logoutButton = document.getElementById('logout-button');
+        const loginLink = document.getElementById('login-link');
         const userForm = document.getElementById('user-form');
         const editUserForm = document.getElementById('edit-user-form');
         const userModal = new bootstrap.Modal(document.getElementById('user-modal'));
@@ -172,16 +200,26 @@
         const logoutModal = new bootstrap.Modal(logoutModalElement);
         const logoutError = document.getElementById('logout-error');
         const confirmLogoutButton = document.getElementById('confirm-logout-button');
-        let users = [];
+        const users = @json($users);
         let editingUserId = null;
         let deletingUser = null;
+
+        function updateAuthenticationControls() {
+            const isAuthenticated = Boolean(localStorage.getItem('token'));
+
+            addUserButton.classList.toggle('d-none', !isAuthenticated);
+            logoutButton.classList.toggle('d-none', !isAuthenticated);
+            loginLink.classList.toggle('d-none', isAuthenticated);
+            document.querySelectorAll('.user-actions').forEach((actions) => {
+                actions.classList.toggle('d-none', !isAuthenticated);
+            });
+        }
 
         function getToken() {
             const token = localStorage.getItem('token');
 
             if (!token) {
-                window.location.assign(loginUrl);
-                throw new Error('Sesi login tidak ditemukan.');
+                throw new Error('Silakan login untuk mengelola data user.');
             }
 
             return token;
@@ -222,78 +260,6 @@
 
         function hideStatus() {
             statusBox.classList.add('d-none');
-        }
-
-        function createCell(value) {
-            const cell = document.createElement('td');
-            cell.textContent = value;
-            return cell;
-        }
-
-        function renderUsers() {
-            tableBody.replaceChildren();
-
-            if (users.length === 0) {
-                const row = document.createElement('tr');
-                const cell = createCell('Belum ada data user.');
-                cell.colSpan = 5;
-                cell.className = 'text-center text-secondary py-4';
-                row.appendChild(cell);
-                tableBody.appendChild(row);
-                return;
-            }
-
-            users.forEach((user, index) => {
-                const row = document.createElement('tr');
-                const hobbies = Array.isArray(user.hobis)
-                    ? user.hobis.map((hobi) => hobi.nama_hobi).join(', ')
-                    : '';
-                const actionsCell = document.createElement('td');
-                const actions = document.createElement('div');
-                const editButton = document.createElement('button');
-                const deleteButton = document.createElement('button');
-
-                row.append(
-                    createCell(String(index + 1)),
-                    createCell(user.name ?? ''),
-                    createCell(user.email ?? ''),
-                    createCell(hobbies)
-                );
-
-                actions.className = 'd-flex justify-content-end gap-2';
-                editButton.type = 'button';
-                editButton.className = 'btn btn-sm btn-outline-primary';
-                editButton.textContent = 'Edit';
-                editButton.addEventListener('click', () => openEditModal(user));
-
-                deleteButton.type = 'button';
-                deleteButton.className = 'btn btn-sm btn-outline-danger';
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', () => openDeleteUserModal(user));
-
-                actions.append(editButton, deleteButton);
-                actionsCell.appendChild(actions);
-                row.appendChild(actionsCell);
-                tableBody.appendChild(row);
-            });
-        }
-
-        async function loadUsers() {
-            hideStatus();
-
-            try {
-                const data = await apiRequest(apiUrl);
-
-                if (!Array.isArray(data.users)) {
-                    throw new Error('Format respons API tidak sesuai.');
-                }
-
-                users = data.users;
-                renderUsers();
-            } catch (error) {
-                tableBody.replaceChildren();
-                showStatus(`Gagal mengambil data user: ${error.message}`, true);
-            }
         }
 
         function openAddModal() {
@@ -338,8 +304,7 @@
                 );
 
                 modal.hide();
-                await loadUsers();
-                showStatus(userId !== null ? 'Data user berhasil diperbarui.' : 'User berhasil ditambahkan.');
+                window.location.reload();
             } catch (error) {
                 showStatus(`Gagal menyimpan user: ${error.message}`, true);
             } finally {
@@ -348,6 +313,24 @@
         }
 
         addUserButton.addEventListener('click', openAddModal);
+        document.querySelectorAll('.edit-user-button').forEach((button) => {
+            button.addEventListener('click', () => {
+                const user = users.find((item) => item.id === Number(button.dataset.userId));
+
+                if (user) {
+                    openEditModal(user);
+                }
+            });
+        });
+        document.querySelectorAll('.delete-user-button').forEach((button) => {
+            button.addEventListener('click', () => {
+                const user = users.find((item) => item.id === Number(button.dataset.userId));
+
+                if (user) {
+                    openDeleteUserModal(user);
+                }
+            });
+        });
         userForm.addEventListener('submit', (event) => saveUser(event, userForm, null, saveUserButton, userModal));
         editUserForm.addEventListener('submit', (event) => {
             saveUser(event, editUserForm, editingUserId, saveEditUserButton, editUserModal);
@@ -373,8 +356,7 @@
                 await apiRequest(`${apiUrl}/delete/${deletingUser.id}`, { method: 'DELETE' });
                 deleteUserModal.hide();
                 deletingUser = null;
-                await loadUsers();
-                showStatus('User berhasil dihapus.');
+                window.location.reload();
             } catch (error) {
                 deleteUserError.textContent = `Gagal menghapus user: ${error.message}`;
                 deleteUserError.classList.remove('d-none');
@@ -410,7 +392,7 @@
             }
         });
 
-        loadUsers();
+        updateAuthenticationControls();
     </script>
 </body>
 </html>

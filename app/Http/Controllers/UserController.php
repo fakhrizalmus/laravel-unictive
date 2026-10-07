@@ -10,10 +10,14 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function home()
     {
-        $user = User::with('hobis')->where('role', 'user')->get();
-        return response()->json(['users' => $user]);
+        $users = User::with('hobis')
+            ->where('role', 'user')
+            ->orderBy('name')
+            ->get();
+
+        return view('index', compact('users'));
     }
 
     public function store(Request $request)
@@ -61,17 +65,11 @@ class UserController extends Controller
         ], 201);
     }
 
-    public function show($id)
-    {
-        $user = User::with('hobis')->find($id);
-        return response()->json(['user' => $user]);
-    }
-
     public function update(Request $request, $id)
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'status' => false,
                 'message' => 'User not found',
@@ -113,7 +111,7 @@ class UserController extends Controller
                 $hobiIds = [];
 
                 foreach ($validated['hobis'] as $hobiData) {
-                    if (!empty($hobiData['id'])) {
+                    if (! empty($hobiData['id'])) {
                         $hobi = $user->hobis()->whereKey($hobiData['id'])->firstOrFail();
                         $hobi->update(['nama_hobi' => $hobiData['nama_hobi']]);
                     } else {
@@ -146,7 +144,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'status' => false,
                 'message' => 'User not found',

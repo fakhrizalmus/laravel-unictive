@@ -19,7 +19,7 @@ Aplikasi CRUD User dan Hobi menggunakan Laravel, Blade, dan JWT Authentication.
 
 ## Blade
 
-Setelah login, buka `/home` untuk menambah, melihat, mengubah, dan menghapus user beserta hobinya. Form menerima beberapa hobi yang dipisahkan dengan koma; saat mengedit, kosongkan form hobi untuk menghapus semuanya.
+Buka `/home` untuk melihat daftar user dan hobinya; halaman ini dapat diakses tanpa login. Login diperlukan untuk menambah, mengubah, atau menghapus data. Form menerima beberapa hobi yang dipisahkan dengan koma; saat mengedit, kosongkan form hobi untuk menghapus semuanya.
 
 ## API
 
@@ -30,14 +30,12 @@ Semua endpoint mengembalikan JSON. Gunakan header `Accept: application/json`. En
 | `POST` | `/api/auth/register` | Membuat akun admin |
 | `POST` | `/api/auth/login` | Login dan memperoleh token |
 
-Endpoint berikut memerlukan token JWT pada header `Authorization` dengan skema `Bearer`:
+Hanya endpoint mutasi dan logout berikut yang memerlukan token JWT pada header `Authorization` dengan skema `Bearer`. Daftar user ditampilkan langsung oleh halaman `/home`, bukan melalui endpoint `/api/user`:
 
 | Method | Endpoint | Fungsi |
 | --- | --- | --- |
 | `POST` | `/api/auth/logout` | Logout dan mencabut token |
-| `GET` | `/api/user` | Daftar user dan hobinya |
 | `POST` | `/api/user/create` | Membuat user dan daftar hobi |
-| `GET` | `/api/user/{id}` | Detail user dan hobinya |
 | `PUT` | `/api/user/edit/{id}` | Memperbarui user dan daftar hobi |
 | `DELETE` | `/api/user/delete/{id}` | Menghapus user beserta hobinya |
 
