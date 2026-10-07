@@ -24,10 +24,10 @@ use Illuminate\Support\Facades\Route;
 Route::group(['middleware' => 'api', 'prefix' => 'auth'], function ($router) {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login'])->name('login');
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
 });
     
 Route::group(['middleware' => 'auth:api', 'prefix' => 'user'], function () {
-    Route::post('logout', [AuthController::class, 'logout']);
     Route::put('edit/{id}', [UserController::class, 'update']);
     Route::delete('delete/{id}', [UserController::class, 'destroy']);
     Route::post('create', [UserController::class, 'store']);

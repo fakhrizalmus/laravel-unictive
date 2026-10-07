@@ -41,7 +41,7 @@
                         </tr>
                     </thead>
                     <tbody id="users-table-body">
-                        @forelse ($users as $index => $user)
+                        @foreach ($users as $index => $user)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $user->name }}</td>
@@ -62,11 +62,12 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        @endforeach
+                        @if ($users->isEmpty())
                             <tr>
                                 <td colspan="5" class="text-center text-secondary py-4">Belum ada data user.</td>
                             </tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>
