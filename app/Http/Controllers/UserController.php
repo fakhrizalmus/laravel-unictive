@@ -46,14 +46,7 @@ class UserController extends Controller
                 'password' => 'password',
             ]);
 
-            $hobis = array_map(function (array $hobi) use ($user) {
-                return [
-                    'nama_hobi' => $hobi['nama_hobi'],
-                    'user_id' => $user->id,
-                ];
-            }, $validated['hobis']);
-
-            $user->hobis()->createMany($hobis);
+            $user->hobis()->createMany($validated['hobis']);
 
             return $user->load('hobis');
         });
@@ -69,7 +62,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'status' => false,
                 'message' => 'User not found',
@@ -111,7 +104,7 @@ class UserController extends Controller
                 $hobiIds = [];
 
                 foreach ($validated['hobis'] as $hobiData) {
-                    if (! empty($hobiData['id'])) {
+                    if (!empty($hobiData['id'])) {
                         $hobi = $user->hobis()->whereKey($hobiData['id'])->firstOrFail();
                         $hobi->update(['nama_hobi' => $hobiData['nama_hobi']]);
                     } else {
@@ -144,7 +137,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'status' => false,
                 'message' => 'User not found',
@@ -152,6 +145,7 @@ class UserController extends Controller
         }
 
         DB::transaction(function () use ($user) {
+            $user->hobis()->delete();
             $user->delete();
         });
 
