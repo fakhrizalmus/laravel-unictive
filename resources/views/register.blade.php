@@ -28,7 +28,7 @@
 
                     <div class="mb-4">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" autocomplete="new-password" required>
+                        <input type="password" class="form-control" id="password" name="password" minlength="6" autocomplete="new-password" required>
                     </div>
 
                     <button id="register-button" type="submit" class="btn btn-primary w-100">
