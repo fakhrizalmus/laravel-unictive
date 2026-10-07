@@ -79,7 +79,7 @@ class UserController extends Controller
                 'sometimes',
                 'required',
                 'email',
-                Rule::unique('users', 'email')->whereNull('deleted_at'),
+                Rule::unique('users', 'email')->whereNull('deleted_at')->ignore($user->id),
             ],
             'hobis' => ['sometimes', 'array'],
             'hobis.*.id' => [
