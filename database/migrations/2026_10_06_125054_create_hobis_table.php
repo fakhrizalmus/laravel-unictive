@@ -18,7 +18,6 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->string('nama_hobi');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
